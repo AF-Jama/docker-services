@@ -1,0 +1,39 @@
+services:
+  redis-service:
+    image: redis:latest
+    volumes:
+      - redis_volume:/data
+    ports:
+      - "6379:6379"
+
+    restart: always
+
+#  nginx_service:
+#    image: nginx
+#    volumes:
+#      - /nginx/data/html:/usr/share/nginx/html
+#      - /nginx/data/conf.d:/etc/nginx/conf.d
+#
+#    ports:
+#       - "81:80"
+#
+#    restart: always
+
+
+  sql_service:
+    image: mysql:latest
+    volumes:
+      - /sql/data:/var/lib/mysql
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: init_db
+
+    ports:
+      - "3306:3306"
+
+    restart: always
+
+volumes:
+  redis_volume:
+    external: true
