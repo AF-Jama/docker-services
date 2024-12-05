@@ -9,6 +9,8 @@ services:
     ports:
       - "6379:6379"
 
+#    env_file: "redis.env"
+
     restart: always
 
 #  nginx_service:
@@ -146,6 +148,34 @@ services:
 #    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
 #    restart: unless-stopped
 
+  openvpn-service:
+    image: openvpn/openvpn-as
+    ports:
+      - "943:943"
+     # - "443:443" # running on port 443 if firewall blocks default 1194
+      - "1194:1194"
+
+    volumes:
+      - openvpn_data:/openvpn
+
+    restart: unless-stopped
+
+  plex_server:
+    image: plexinc/pms-docker:latest
+    ports:
+      - "32400:32400" # running on port 32400
+
+    env_file: "plex.env"
+
+    volumes:
+      - plex_database:/config
+      - plex_temp:/transcode
+      - plex_media:/data
+
+    restart: unless-stopped
+
+    network_mode: host
+
 volumes:
   redis_volume:
       external: true
@@ -156,6 +186,14 @@ volumes:
   sql_db:
 
   portainer_data:
+
+  openvpn_data:
+
+  plex_database:
+
+  plex_temp:
+
+  plex_media:
 
 networks:
   job_network:
