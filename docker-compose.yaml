@@ -25,16 +25,6 @@ services:
 #    restart: always
 
 
-#    nextcloud_service:
-#        image: nextcloud:stable
-#        volumes:
-#         - nextcloud:/var/www/html
-#          - apps:/var/www/html/custom_apps
-#          - config:/var/www/html/config
-#          - data:/var/www/html/data
-#          - db:/var/lib/mysql
-
-
   job_tracker:
     image: jobtracker:latest
     restart: always
@@ -130,23 +120,23 @@ services:
     ports:
       - "9001:9001"
 
-#  pihole:
-#    container_name: pihole
-#    image: pihole/pihole:latest
-#    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-#    ports:
-#      - "53:53/tcp"
-#      - "53:53/udp"
-#     # - "53:53"
-#      - "8081:80"
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+#      - "53:53"
+      - "8081:80"
 
-#    env_file: "pi.env"
-#    # Volumes store your data between container upgrades
-#    volumes:
-#      - './etc-pihole:/etc/pihole'
-#      - './etc-dnsmasq.d:/etc/dnsmasq.d'
-#    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
-#    restart: unless-stopped
+    env_file: "pi.env"
+    # Volumes store your data between container upgrades
+    volumes:
+      - './etc-pihole:/etc/pihole'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    restart: unless-stopped
 
   openvpn-service:
     image: openvpn/openvpn-as
@@ -168,13 +158,43 @@ services:
     env_file: "plex.env"
 
     volumes:
-      - plex_database:/config
-      - plex_temp:/transcode
-      - plex_media:/data
+      - /plex/config:/config
+      - /plex/transcode:/transcode
+      - /plex/Media:/data
 
     restart: unless-stopped
 
     network_mode: host
+
+  mail_server:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mailserver
+    ports:
+      - "25:25" # SMTP (unencrypted)
+      - "465:465" # implicit tls port
+      - "587:587" # SMARTTLS port
+      - "993:993" # IMAP port (retrieval)
+
+    hostname: mail.jamanets.com
+
+    volumes:
+      - ./docker-data/dms/mail-data/:/var/mail/
+      - ./docker-data/dms/mail-state/:/var/mail-state/
+      - ./docker-data/dms/mail-logs/:/var/log/mail/
+      - ./docker-data/dms/config/:/tmp/docker-mailserver/
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/letsencrypt:/etc/letsencrypt
+
+    environment:
+      - ENABLE_RSPAMD=1
+      - ENABLE_CLAMAV=1
+      - ENABLE_FAIL2BAN=1
+      - SSL_TYPE=letsencrypt
+      - SPOOF_PROTECTION=0
+
+    cap_add:
+      - NET_ADMIN # For Fail2Ban to work
+    restart: always
 
 volumes:
   redis_volume:
