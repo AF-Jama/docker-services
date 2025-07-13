@@ -26,7 +26,7 @@ services:
 
 
   job_tracker:
-    image: jobtracker:latest
+    image: jobtracker:1
     restart: always
 
     ports:
