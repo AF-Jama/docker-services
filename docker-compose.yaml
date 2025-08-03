@@ -4,8 +4,11 @@ version: "3"
 services:
   redis-service:
     image: redis:latest
+    container_name: redis-server
     volumes:
       - redis_volume:/data
+      - /myredis/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
       - "6379:6379"
 
@@ -120,23 +123,23 @@ services:
     ports:
       - "9001:9001"
 
-  pihole:
-    container_name: pihole
-    image: pihole/pihole:latest
-    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-#      - "53:53"
-      - "8081:80"
+#  pihole:
+#    container_name: pihole
+#    image: pihole/pihole:latest
+#    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+#    ports:
+#      - "53:53/tcp"
+#      - "53:53/udp"
+##      - "53:53"
+#      - "8081:80"
 
-    env_file: "pi.env"
-    # Volumes store your data between container upgrades
-    volumes:
-      - './etc-pihole:/etc/pihole'
-      - './etc-dnsmasq.d:/etc/dnsmasq.d'
-    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
-    restart: unless-stopped
+#    env_file: "pi.env"
+#    # Volumes store your data between container upgrades
+#    volumes:
+#      - './etc-pihole:/etc/pihole'
+#      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+#    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+#    restart: unless-stopped
 
   openvpn-service:
     image: openvpn/openvpn-as
@@ -184,6 +187,7 @@ services:
       - ./docker-data/dms/config/:/tmp/docker-mailserver/
       - /etc/localtime:/etc/localtime:ro
       - /etc/letsencrypt:/etc/letsencrypt
+      - /docker-data/dms/mail-logs/:/var/log/mail/
 
     environment:
       - ENABLE_RSPAMD=1
@@ -195,6 +199,51 @@ services:
     cap_add:
       - NET_ADMIN # For Fail2Ban to work
     restart: always
+
+  crowdsec_service:
+    image: crowdsecurity/crowdsec
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+      - "6060:6060"
+    volumes:
+     - /docker-data/dms/mail-logs/:/var/log/dms:ro
+     - ./acquis.d:/etc/crowdsec/acquis.d
+     - crowdsec-db:/var/lib/crowdsec/data/
+    environment:
+    # These collection contains parsers and scenarios for postfix and dovecot
+     COLLECTIONS: crowdsecurity/postfix crowdsecurity/dovecot
+     TZ: Europe/Paris
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - 9090:9090
+
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter
+    ports:
+      - 9100:9100
+
+    restart: unless-stopped
+
+  grafana-application:
+    image: grafana/grafana-enterprise
+    ports:
+      - "3005:3000"
+
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+    environment:
+      - GF_PLUGINS_PREINSTALL=grafana-clock-panel@1.0.1
+      - GF_LOG_LEVEL=trace
+
+    restart: unless-stopped
 
 volumes:
   redis_volume:
@@ -214,6 +263,10 @@ volumes:
   plex_temp:
 
   plex_media:
+
+  crowdsec-db:
+
+  grafana-data:
 
 networks:
   job_network:
