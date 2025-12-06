@@ -176,40 +176,40 @@ services:
 
     network_mode: host
 
-  mail_server:
-    image: ghcr.io/docker-mailserver/docker-mailserver:latest
-    container_name: mailserver
-    ports:
-      - "25:25" # SMTP (unencrypted)
-      - "143:143" # IMAP4
-      - "465:465" # ESMTP implicit tls port <-----
-      - "587:587" # ESMPT SMARTTLS port (TLS Upgrade)
-      - "993:993" # IMAP port (retrieval)(implicit TLS) <---
-      - "110:110" # pop3 
-      - "995:995" # pop3 (with TLS)
+  # mail_server:
+  #   image: ghcr.io/docker-mailserver/docker-mailserver:latest
+  #   container_name: mailserver
+  #   ports:
+  #     - "25:25" # SMTP (unencrypted)
+  #     - "143:143" # IMAP4
+  #     - "465:465" # ESMTP implicit tls port <-----
+  #     - "587:587" # ESMPT SMARTTLS port (TLS Upgrade)
+  #     - "993:993" # IMAP port (retrieval)(implicit TLS) <---
+  #     - "110:110" # pop3 
+  #     - "995:995" # pop3 (with TLS)
 
-    hostname: mail.jamanets.com
+  #   hostname: mail.jamanets.com
 
-    volumes:
-      - ./docker-data/dms/mail-data/:/var/mail/
-      - ./docker-data/dms/mail-state/:/var/mail-state/
-      - ./docker-data/dms/mail-logs/:/var/log/mail/
-      - ./docker-data/dms/config/:/tmp/docker-mailserver/
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/letsencrypt:/etc/letsencrypt
-      - /docker-data/dms/mail-logs/:/var/log/mail/
+  #   volumes:
+  #     - ./docker-data/dms/mail-data/:/var/mail/
+  #     - ./docker-data/dms/mail-state/:/var/mail-state/
+  #     - ./docker-data/dms/mail-logs/:/var/log/mail/
+  #     - ./docker-data/dms/config/:/tmp/docker-mailserver/
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - /etc/letsencrypt:/etc/letsencrypt
+  #     - /docker-data/dms/mail-logs/:/var/log/mail/
 
-    environment:
-      - ENABLE_RSPAMD=1
-      - ENABLE_CLAMAV=1
-      - ENABLE_FAIL2BAN=1
-      - SSL_TYPE=letsencrypt
-      - SPOOF_PROTECTION=0
-      - ENABLE_POP3=1
+  #   environment:
+  #     - ENABLE_RSPAMD=1
+  #     - ENABLE_CLAMAV=1
+  #     - ENABLE_FAIL2BAN=1
+  #     - SSL_TYPE=letsencrypt
+  #     - SPOOF_PROTECTION=0
+  #     - ENABLE_POP3=1
 
-    cap_add:
-      - NET_ADMIN # For Fail2Ban to work
-    restart: always
+  #   cap_add:
+  #     - NET_ADMIN # For Fail2Ban to work
+  #   restart: always
 
   crowdsec_service:
     image: crowdsecurity/crowdsec
